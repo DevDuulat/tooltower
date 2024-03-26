@@ -12,6 +12,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use CodeWithDennis\FilamentSelectTree\SelectTree;
 
 class CategoryResource extends Resource
 {
@@ -31,12 +32,12 @@ class CategoryResource extends Resource
                     ->maxLength(255),
                 Forms\Components\Textarea::make('description')
                     ->columnSpanFull(),
-                Forms\Components\Select::make('parent_id')
-                    ->label('Parent Category')
-                    ->options(
-                        Category::all()->pluck('name', 'id')->toArray()
-                    )
-                    ->nullable(),
+                SelectTree::make('parent_id') // Используем SelectTree для выбора родительской категории
+                    ->relationship('parent', 'name', 'parent_id') // Устанавливаем отношение категорий
+                    ->placeholder(__('Please select a category')) // Устанавливаем пользовательское сообщение, когда не выбраны категории
+                    ->enableBranchNode() // Включаем возможность выбора группы
+                    ->independent(false)
+
             ]);
     }
 
@@ -47,8 +48,10 @@ class CategoryResource extends Resource
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('slug')
+                    ->label('Slug')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('parent_id')
+                Tables\Columns\TextColumn::make('parent.name')
+                    ->label('Category')
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
